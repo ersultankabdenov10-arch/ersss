@@ -1,0 +1,14 @@
+{% extends "cars/base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div style="background-color: #dc3545; color: white; padding: 40px; border-radius: 10px; text-align: center;">
+    <h3 style="margin-bottom: 20px;">
+      <i class="bi bi-shield-lock-fill" style="font-size: 1.5rem;"></i>
+      Бұл бөлім тек әкімшілерге ғана арналған
+    </h3>
+    <a href="{% url 'car_list' %}" style="background-color: white; color: #dc3545; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+      ← Автокөліктер тізіміне өту
+    </a>
+  </div>
+</div>
+{% endblock %}

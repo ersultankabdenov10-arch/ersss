@@ -1,0 +1,125 @@
+{% extends "cars/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Қолжетімді автокөліктер</h2>
+
+  {% if messages %}
+    <div class="d-flex justify-content-center mt-3">
+      <div class="w-50">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Жабу"></button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if cars %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+      {% for car in cars %}
+        <!-- Modal -->
+        <div class="modal fade" id="rulesModal{{ car.id }}" tabindex="-1" aria-labelledby="rulesModalLabel{{ car.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="rulesModalLabel{{ car.id }}">Автокөлікті жалға алу ережелері</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Жабу"></button>
+              </div>
+              <div class="modal-body">
+                <ul>
+                  <li>Көлікке зақым келтірсеңіз — өзіңіз жауап бересіз.</li>
+                  <li>Басқа жүргізуші кінәлі болса — оның сақтандыруы өтейді.</li>
+                  <li>Алкогольмен басқару, рұқсатсыз жүргізуші — сақтандырумен жабылмайды.</li>
+                  <li>Брондау тек шартпен танысып, келісімнен кейін рұқсат етіледі.</li>
+                </ul>
+
+                <div class="form-check mt-3">
+                  <input class="form-check-input" type="checkbox" value="" id="agreeCheck{{ car.id }}">
+                  <label class="form-check-label" for="agreeCheck{{ car.id }}">
+                    Ережелермен таныстым және келісемін
+                  </label>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Жабу</button>
+                <a href="{% url 'book_car' car.id %}" id="proceedBtn{{ car.id }}" class="btn btn-primary disabled">
+                  Брондауға өту
+                </a>
+              </div>
+            </div>
+          </div>
+    </div>
+
+        {% if car.status == "available" %}
+        <div class="col">
+          <div class="card shadow-sm h-100">
+            <img src="{{ car.image.url }}" class="card-img-top" alt="{{ car.brand }} {{ car.model }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ car.brand }} {{ car.model }}</h5>
+              <p class="card-text">
+                • шыққан жылы: {{ car.year }} <br>
+                • моделі: {{ car.car_type }} <br>
+                • Бағасы: {{ car.price_per_day }} ₸/күніне
+              </p>
+
+              {% if user.is_authenticated and user.employee %}
+                {% if user.employee.role == 'admin' %}
+                  <a href="{% url 'edit_car' car.id %}" class="btn btn-outline-warning w-100">
+                    <i class="bi bi-pencil-square me-1"></i> Өңдеу
+                  </a>
+                {% elif user.employee.role == 'guest' %}
+                  <button class="btn btn-outline-danger w-100" disabled>
+                    <i class="bi bi-lock"></i> Бұл функция тек тіркелген қолданушылар үшін
+                  </button>
+                {% else %}
+                  {% if has_active_booking %}
+                    <button class="btn btn-outline-secondary w-100" disabled>
+                      <i class="bi bi-exclamation-circle"></i> Қазіргі уақытта Сізде брондалған автокөлік бар
+                    </button>
+                  {% else %}
+                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#rulesModal{{ car.id }}">
+                      <i class="bi bi-calendar-check me-1"></i> Брондау
+                    </button>
+                  {% endif %}
+                {% endif %}
+              {% else %}
+                <button class="btn btn-outline-secondary w-100" disabled>
+                  <i class="bi bi-lock"></i> Тіркелу қажет
+                </button>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center">Қазіргі уақытта автокөліктер қолжетімді емес.</div>
+  {% endif %}
+</div>
+
+<!-- Вставка JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    {% for car in cars %}
+      const check{{ car.id }} = document.getElementById("agreeCheck{{ car.id }}");
+      const btn{{ car.id }} = document.getElementById("proceedBtn{{ car.id }}");
+
+      if (check{{ car.id }} && btn{{ car.id }}) {
+        check{{ car.id }}.addEventListener("change", function () {
+          btn{{ car.id }}.classList.toggle("disabled", !this.checked);
+        });
+      }
+    {% endfor %}
+  });
+</script>
+
+{% endblock %}
+
+
+

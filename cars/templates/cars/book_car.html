@@ -1,0 +1,286 @@
+{% extends "cars/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Автокөлікті брондау</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Жабу"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">{{ car.brand }} {{ car.model }}</h5>
+      <p class="card-text">Шыққан жылы: {{ car.year }} | Тип: {{ car.car_type }}</p>
+      <p class="card-text">Бағасы күніне: <strong id="pricePerDay">{{ car.price_per_day }}</strong> ₸</p>
+
+      <form method="post" oninput="calculateTotal()">
+        {% csrf_token %}
+        <!-- Скрытое поле для клиентского времени -->
+        <input type="hidden" id="start_datetime" name="start_datetime">
+        <div class="mb-3">
+          <label for="start_date" class="form-label">Жалға алудың басталу күні</label>
+          <input type="date" id="start_date" name="start_date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ағымдағы уақыт:</label>
+          <div id="current-time" class="form-control bg-light"></div>
+        </div>
+        <div class="mb-3">
+          <label for="end_date" class="form-label">Жалға алудың аяқталу күні</label>
+          <input type="date" id="end_date" name="end_date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_address" class="form-label">Мекенжай</label>
+          <input type="text" id="id_address" name="location" class="form-control" placeholder="Автоматты түрде толтырылады" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="id_coordinates" class="form-label">Координаттары</label>
+          <input type="text" id="id_coordinates" name="coordinates" class="form-control" placeholder="43.255000, 76.950000" required>
+        </div>
+
+        <div id="map" style="height: 300px; margin-top: 20px; border-radius: 8px;"></div>
+
+        <div class="alert alert-info" id="summary" style="display: none;">
+          <span id="daysCount"></span> күн × <span id="priceDay"></span> ₸ = <strong><span id="totalPrice"></span> ₸</strong>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="d-flex justify-content-center gap-4 mt-4">
+          <button type="submit" class="btn btn-success" id="saveBtn">
+            <i class="bi bi-calendar-check me-1"></i> Брондау
+          </button>
+          <a href="{% url 'home' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle me-1"></i> Басты бетке қайту
+          </a>
+        </div>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-lock me-1"></i> Кіру арқылы брондау
+          </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const pricePerDay = parseFloat(document.getElementById('pricePerDay').textContent);
+    const startDatetimeHidden = document.getElementById('start_datetime');
+
+    function updateCurrentTime() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      // Показываем текущее время пользователю
+      const timeDisplay = document.getElementById('current-time');
+      if (timeDisplay) {
+        timeDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+      }
+
+      // Обновляем скрытое поле с datetime, только если дата выбрана
+      const datetimeInput = document.getElementById('start_datetime');
+      const startDateInput = document.getElementById('start_date');
+      if (datetimeInput && startDateInput.value) {
+        const isoTime = now.toTimeString().split(' ')[0];  // HH:MM:SS
+        const fullDateTime = `${startDateInput.value}T${isoTime}`;
+        datetimeInput.value = fullDateTime;
+      }
+    }
+
+    function calculateTotal() {
+      const start = startDateInput.value;
+      const end = endDateInput.value;
+      const summary = document.getElementById('summary');
+      const daysCountEl = document.getElementById('daysCount');
+      const totalPriceEl = document.getElementById('totalPrice');
+      const priceDayEl = document.getElementById('priceDay');
+
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffTime = endDate - startDate;
+        const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (days >= 0) {
+          summary.style.display = 'block';
+          daysCountEl.textContent = days + 1;
+          priceDayEl.textContent = pricePerDay.toFixed(2);
+          totalPriceEl.textContent = ((days + 1) * pricePerDay).toFixed(2);
+        } else {
+          summary.style.display = 'none';
+        }
+      } else {
+        summary.style.display = 'none';
+      }
+    }
+
+    // Устанавливаем ограничения по дате
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = today;
+
+    // Обновление времени и расчета
+    setInterval(updateCurrentTime, 1000);
+    startDateInput.addEventListener('input', updateCurrentTime);
+    startDateInput.addEventListener('input', calculateTotal);
+    endDateInput.addEventListener('input', calculateTotal);
+
+    // Принудительно обновим при загрузке
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+    calculateTotal();
+  });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const addressField = document.getElementById("id_address");
+  const coordinatesField = document.getElementById("id_coordinates");
+
+  if (!navigator.geolocation) {
+    console.warn("🛑 Геолокация не поддерживается");
+    if (addressField) {
+      addressField.value = "Геолокация қолжетімді емес";
+    }
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude.toFixed(6);
+      const lng = position.coords.longitude.toFixed(6);
+
+      if (coordinatesField) {
+        coordinatesField.value = `${lat}, ${lng}`;
+      }
+
+      const apiKey = "AIzaSyBVNcvi0RV8gb1MuBXNWUrJnIZS5sVlLlQ";  // Заменить на реальный ключ!
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=ru&key=${apiKey}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "OK" && data.results.length > 0) {
+            const formatted = data.results[0].formatted_address;
+            if (addressField && formatted) {
+              addressField.value = formatted;
+              console.log("✅ Адрес определён:", formatted);
+            }
+          } else {
+            console.warn("⚠️ Адрес не определён, статус:", data.status);
+            if (addressField && !addressField.value) {
+              addressField.value = "Адрес анықталмады";
+            }
+          }
+        })
+        .catch(error => {
+          console.error("❌ Ошибка запроса к Google API:", error);
+          if (addressField && !addressField.value) {
+            addressField.value = "Қате орын алды";
+          }
+        });
+    },
+    function (error) {
+      console.error("🛑 Ошибка геолокации:", error.message);
+      if (addressField) {
+        addressField.value = "Геолокация өшірілген";
+      }
+    }
+  );
+});
+</script>
+
+<!-- Google Maps API (подставь свой API ключ) -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVNcvi0RV8gb1MuBXNWUrJnIZS5sVlLlQ"></script>
+
+<script>
+function initMapAtCoords(lat, lng) {
+  const mapDiv = document.getElementById("map");
+  if (!mapDiv) return;
+
+  const position = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+  const map = new google.maps.Map(mapDiv, {
+    zoom: 16,
+    center: position,
+  });
+
+  new google.maps.Marker({
+    position: position,
+    map: map,
+    title: "Сіздің орналасуыңыз",
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const addressField = document.getElementById("id_address");
+  const coordinatesField = document.getElementById("id_coordinates");
+
+  if (!navigator.geolocation) {
+    addressField.value = "Геолокация қолжетімді емес";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude.toFixed(6);
+      const lng = position.coords.longitude.toFixed(6);
+
+      if (coordinatesField) {
+        coordinatesField.value = `${lat}, ${lng}`;
+      }
+
+      initMapAtCoords(lat, lng);  // 👉 добавлено здесь, после получения координат
+
+      const apiKey = "AIzaSyBVNcvi0RV8gb1MuBXNWUrJnIZS5sVlLlQ";
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=ru&key=${apiKey}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "OK" && data.results.length > 0) {
+            const formatted = data.results[0].formatted_address;
+            if (addressField && formatted) {
+              addressField.value = formatted;
+              console.log("✅ Адрес определён:", formatted);
+            }
+          } else {
+            console.warn("⚠️ Адрес не определён, статус:", data.status);
+            if (addressField && !addressField.value) {
+              addressField.value = "Адрес анықталмады";
+            }
+          }
+        })
+        .catch(error => {
+          console.error("❌ Ошибка запроса к Google API:", error);
+          if (addressField && !addressField.value) {
+            addressField.value = "Қате орын алды";
+          }
+        });
+    },
+    function (error) {
+      console.error("🛑 Ошибка геолокации:", error.message);
+      if (addressField) {
+        addressField.value = "Геолокация өшірілген";
+      }
+    }
+  );
+});
+</script>
+
+
+
+
+{% endblock %}

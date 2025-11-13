@@ -1,0 +1,40 @@
+{% extends "cars/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Броннан шығару</h2>
+
+  {% if bookings %}
+    <div class="row justify-content-center">
+      {% for booking in bookings %}
+        {% if booking.status == 'active' %}
+        <div class="col-md-3 mb-4">
+          <div class="card shadow-sm h-100">
+            <img src="{{ booking.car.image.url }}" class="card-img-top" alt="{{ booking.car.brand }} {{ booking.car.model }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ booking.car.brand }} {{ booking.car.model }}</h5>
+              <p class="card-text">
+                • шыққан жылы: {{ booking.car.year }} <br>
+                • моделі: {{ booking.car.car_type }} <br>
+                • Бағасы: {{ booking.car.price_per_day }} ₸/күніне
+              </p>
+              <form method="post" action="{% url 'cancel_booking' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                  <button type="submit" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-x-circle"></i> Шығару
+                  </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center">Сізде белсенді брондау жоқ.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

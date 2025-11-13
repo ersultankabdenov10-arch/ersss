@@ -1,0 +1,64 @@
+{% extends "cars/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">Менің брондауларым</h2>
+  {% if bookings %}
+    {% if messages %}
+    <div class="d-flex justify-content-center mt-3">
+      <div class="w-50">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Жабу"></button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+    <table class="table table-striped table-bordered text-center">
+      <thead class="table-light">
+        <tr>
+          <th class="text-center">№ р/б</th>
+          <th>Автокөлік</th>
+          <th>Басталған уақыты</th>
+          <th>Аяқталған уақыты</th>
+          <th>Бағасы (₸/күн)</th>
+          <th>Жалға алу уақыты</th>
+          <th>Координаталары</th>
+          <th>Мекен-жайы</th>
+          <th>Төлемі (₸)</th>
+          <th>Әрекет</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ booking.car.brand }} {{ booking.car.model }}</td>
+          <td>{{ booking.start_date|date:"d.m.Y H:i" }}</td>
+          <td>{{ booking.end_date|date:"d.m.Y H:i" }}</td>
+          <td>{{ booking.car.price_per_day }}</td>
+          <td>{{ booking.duration_display }}</td>
+          <td>{{ booking.car.coordinates }}</td>
+          <td>{{ booking.car.location }}</td>
+          <td>{{ booking.total_payment }}</td>
+          <td>
+            <form action="{% url 'delete_booking' booking.id %}" method="post" onsubmit="return confirm('Бұл брондауды жоюға сенімдісіз бе?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i> Жою
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-info">Сізде белсенді брондау жоқ.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

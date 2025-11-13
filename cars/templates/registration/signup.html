@@ -1,0 +1,84 @@
+{% extends "cars/base.html" %}
+{% load static %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+  <div class="border p-4 rounded shadow" style="width: 100%; max-width: 400px;">
+    <h2 class="mb-4 text-center">Тіркелу</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="mb-3">
+          {% if field.name == 'avatar' %}
+            <label class="form-label" for="custom-file-upload">Аватарды таңдаңыз</label><br>
+            <input id="custom-file-upload" type="file" name="avatar" style="display: none;">
+            <label for="custom-file-upload" class="btn btn-outline-secondary w-100 mb-2">Файлды таңдаңыз</label>
+            <div id="file-name" class="form-text mb-2">Файл таңдалмады</div>
+          {% elif field.name == 'phone' %}
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger">{{ field.errors }}</div>
+          {% endif %}
+          {% elif field.name == 'role' %}
+            <label class="form-label">Рөлді таңдаңыз</label>
+            <div class="custom-select-wrapper">
+              {{ field }}
+              <i class="bi bi-caret-down-fill dropdown-icon"></i>
+            </div>
+            {% if field.errors %}
+              <div class="text-danger">{{ field.errors }}</div>
+            {% endif %}
+
+          {% else %}
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger">{{ field.errors }}</div>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary" style="width: 60%; margin: 0 auto; display: block;">Тіркелу</button>
+    </form>
+  </div>
+</div>
+
+<!-- JavaScript для отображения имени файла -->
+<script>
+  const fileInput = document.getElementById("custom-file-upload");
+  const fileNameDisplay = document.getElementById("file-name");
+
+  if (fileInput && fileNameDisplay) {
+    fileInput.addEventListener("change", function () {
+      const name = this.files.length ? this.files[0].name : "Файл таңдалмады";
+      fileNameDisplay.textContent = name;
+    });
+  }
+</script>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<!-- Стили для выпадающего списка со стрелкой -->
+<style>
+  .custom-select-wrapper {
+    position: relative;
+  }
+
+  .custom-select-wrapper select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+  }
+
+  .dropdown-icon {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 18px;
+    color: #6c757d;
+    z-index: 2;
+  }
+</style>
+{% endblock %}

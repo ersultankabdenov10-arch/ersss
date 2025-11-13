@@ -1,0 +1,31 @@
+{% extends "cars/base.html" %}
+{% block content %}
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Пайдаланушы</th>
+      <th>Email</th>
+      <th>Рөлі</th>
+      <th>Контактілері</th>
+      <th>Қосымша ақпарат</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for emp in employees %}
+    <tr>
+      <td>{{ emp.user.username }}</td>
+      <td>{{ emp.user.email }}</td>
+      <td>{{ emp.get_role_display }}</td>
+      <td>{{ emp.phone }}</td>
+      <td>{{ emp.contact_info }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="text-center mt-5">
+  <a href="{% url 'car_list' %}" class="btn btn-secondary mt-3">Автокөліктер тізіміне оралу</a>
+</div>
+
+{% endblock %}

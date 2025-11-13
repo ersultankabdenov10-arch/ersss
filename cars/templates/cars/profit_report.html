@@ -1,0 +1,70 @@
+{% extends "cars/base.html" %}
+{% block content %}
+{% load humanize %}
+{% load custom_tags %}
+
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Автопарктің табысы</h2>
+
+<form method="get" class="row mb-4">
+  <div class="col-md-3">
+    <label>Басталу күні</label>
+    <input type="date" name="start" value="{{ request.GET.start }}" class="form-control">
+  </div>
+  <div class="col-md-3">
+    <label>Аяқталу күні</label>
+    <input type="date" name="end" value="{{ request.GET.end }}" class="form-control">
+  </div>
+  <div class="col-md-3">
+    <label>Автокөлік</label>
+    <select name="car_id" class="form-select">
+      <option value="">Барлығы</option>
+      {% for c in all_cars %}
+        <option value="{{ c.id }}" {% if request.GET.car_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2 d-flex align-items-end">
+    <button type="submit" class="btn btn-primary w-100">Сүзу</button>
+  </div>
+</form>
+
+  <table class="table table-striped text-center align-middle">
+  <thead>
+    <tr>
+      <th>№</th>  {# <--- добавим номер строки #}
+      <th>Көлік</th>
+      <th>Басталу күні</th>
+      <th>Аяқталу күні</th>
+      <th>Ұзақтығы</th>
+      <th>Пайда (₸)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in records %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ r.car }}</td>
+      <td>{{ r.start_date|date:"d.m.Y H:i" }}</td>
+      <td>{{ r.end_date|date:"d.m.Y H:i" }}</td>
+      <td>{{ r.duration_human_readable }}</td>
+      <td>{{ r.total_profit|format_tenge }} ₸</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <th colspan="5" class="text-end">Жалпы:</th>
+      <th>{{ total|format_tenge }} ₸</th>
+    </tr>
+  </tfoot>
+</table> <br> <br> <br>
+
+    {% if chart %}
+      <div class="text-center mt-4">
+        <img src="data:image/png;base64,{{ chart }}" class="img-fluid" alt="Диаграмма">
+      </div>
+    {% endif %}
+
+</div>
+{% endblock %}
